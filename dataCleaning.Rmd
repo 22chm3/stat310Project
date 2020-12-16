@@ -1,0 +1,62 @@
+---
+title: "dataCleaning"
+author: "Carter Melnick"
+date: "12/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+```{r}
+# Converts a comma separated string into a list of values
+listify <- function(s) {
+  as.list(strsplit(s, ", ")[[1]])
+}
+```
+
+
+```{r message=FALSE, warning=FALSE}
+# Load in full datasets
+# Source: https://www.kaggle.com/stefanoleone992/imdb-extensive-dataset
+# Dataset includes all movies with more than 100 votes
+movies <- read_csv("IMDbmovies.csv")
+movies$index <- seq(1, nrow(movies))
+moviesFinal <- movies %>% mutate(genreList = strsplit(genre, ", "),
+                                 primaryGenre = as.character(map(genreList, 1))) %>%
+                          filter(primaryGenre != "Adult") %>%
+                          select(-genreList)
+```
+
+```{r}
+write_csv(moviesFinal, "movies.csv")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

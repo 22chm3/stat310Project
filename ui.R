@@ -1,24 +1,19 @@
 library(shiny)
+library(plotly)
 
-# Define UI for application that draws a histogram
 shinyUI(fluidPage(
 
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins
+    titlePanel("IMDB Movie Data"),
+    
     sidebarLayout(
         sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
+            uiOutput("genreSelect")
         ),
 
-        # Show a plot of the generated distribution
         mainPanel(
-            plotOutput("distPlot")
+            plotlyOutput("moviePlot"),
+            tableOutput("movieInfo")
+            
         )
     )
 ))
