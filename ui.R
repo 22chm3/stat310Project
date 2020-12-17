@@ -7,12 +7,18 @@ shinyUI(fluidPage(
     
     sidebarLayout(
         sidebarPanel(
-            uiOutput("genreSelect")
+            uiOutput("genreSelect"),
+            uiOutput("countrySelect"),
+            uiOutput("languageSelect"),
+            checkboxInput("sizeControl",
+                          "Show vote count as point size")
         ),
 
         mainPanel(
             plotlyOutput("moviePlot"),
-            tableOutput("movieInfo")
+            tableOutput("movieInfo1"),
+            tableOutput("movieInfo2"),
+            tableOutput("movieInfo3")
             
         )
     )

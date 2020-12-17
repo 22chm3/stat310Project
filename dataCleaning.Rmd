@@ -18,6 +18,27 @@ library(tidyverse)
 listify <- function(s) {
   as.list(strsplit(s, ", ")[[1]])
 }
+
+dollar <- function(s) {
+  newStr <- as.numeric(sub(".* ", "", s))
+  scales::dollar(newStr)
+}
+
+convertDollar <- function(str) {
+  ifelse(is.na(str), str, 
+         ifelse(substr(str, 1, 1) == "$", dollar(str), str))
+}
+
+currency <- function(s) {
+  num <- as.integer(sub(".* ", "", s))
+  id <- sub(" .*", "", s)
+  formattedNum <- as.character(scales::comma(num))
+  paste0(id, formattedNum)
+}
+
+convertCurrency <- function(str) {
+  ifelse(is.na(str), str, currency(str))
+}
 ```
 
 
@@ -28,15 +49,40 @@ listify <- function(s) {
 movies <- read_csv("IMDbmovies.csv")
 movies$index <- seq(1, nrow(movies))
 moviesFinal <- movies %>% mutate(genreList = strsplit(genre, ", "),
-                                 primaryGenre = as.character(map(genreList, 1))) %>%
-                          filter(primaryGenre != "Adult") %>%
-                          select(-genreList)
+                                 primaryGenre = as.character(map(genreList, 1)),
+                                 countryList = strsplit(country, ", "),
+                                 primaryCountry = as.character(map(countryList, 1)),
+                                 languageList = strsplit(language, ", "),
+                                 primaryLanguage = as.character(map(languageList, 1)),
+                                 budget = convertDollar(budget),
+                                 usa_gross_income = convertDollar(usa_gross_income),
+                                 worlwide_gross_income = convertDollar(worlwide_gross_income),
+                                 size=1) %>%
+                          # These two genres each only had 2 movies
+                          filter(primaryGenre != "Adult", primaryGenre != "Documentary") %>%
+                          select(-c(genreList,countryList, languageList))
 ```
 
 ```{r}
 write_csv(moviesFinal, "movies.csv")
 ```
 
+```{r}
+currency <- function(s) {
+  if(substr(s, 1, 1) == "$") {
+    dollar(s)
+  } else {
+    num <- as.integer(sub(".* ", "", s))
+    id <- sub(" .*", "", s)
+    formattedNum <- as.character(scales::comma(num))
+    paste(id, formattedNum)
+  }
+}
+
+convertCurrency <- function(str) {
+  ifelse(is.na(str), str, currency(str))
+}
+```
 
 
 
