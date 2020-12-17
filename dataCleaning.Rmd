@@ -39,6 +39,16 @@ currency <- function(s) {
 convertCurrency <- function(str) {
   ifelse(is.na(str), str, currency(str))
 }
+
+isDollar <- function(str) {
+  ifelse(is.na(str), str, 
+         ifelse(substr(str, 1, 1) == "$", TRUE, FALSE))
+}
+
+asNum <- function(str) {
+  ifelse(is.na(str), str, 
+         ifelse(substr(str, 1, 1) == "$", as.integer(sub(".* ", "", str)), str))
+}
 ```
 
 
@@ -54,9 +64,12 @@ moviesFinal <- movies %>% mutate(genreList = strsplit(genre, ", "),
                                  primaryCountry = as.character(map(countryList, 1)),
                                  languageList = strsplit(language, ", "),
                                  primaryLanguage = as.character(map(languageList, 1)),
+                                 budgetNum = asNum(budget),
+                                 incomeNum = asNum(worlwide_gross_income),
                                  budget = convertDollar(budget),
                                  usa_gross_income = convertDollar(usa_gross_income),
                                  worlwide_gross_income = convertDollar(worlwide_gross_income),
+                                 isDollar = isDollar(budget),
                                  size=1) %>%
                           # These two genres each only had 2 movies
                           filter(primaryGenre != "Adult", primaryGenre != "Documentary") %>%
