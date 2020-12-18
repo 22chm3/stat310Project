@@ -8,10 +8,7 @@ shinyServer(function(input, output, session) {
     movieData <- reactive({
         req(input$countrySelect, input$languageSelect, input$genreSelect)
         data <- movies %>%
-            # filter(grepl(input[[countrySelect]], country, fixed=TRUE),
-            #        grepl(input[[languageSelect]], language, fixed=TRUE),
-            filter(primaryGenre %in% input$genreSelect,
-                   year >= input$yearSelect[1],
+            filter(year >= input$yearSelect[1],
                    year <= input$yearSelect[2],
                    votes >= input$votesSelect)
         if(input$countrySelect != "All Countries") {
@@ -20,8 +17,14 @@ shinyServer(function(input, output, session) {
         if(input$languageSelect != "All Languages") {
             data <- data %>% filter(primaryLanguage == input$languageSelect)
         }
+        if(!"All Genres" %in% input$genreSelect) {
+            data <- data %>% filter(primaryGenre %in% input$genreSelect)
+        }
         if(input$sizeControl == TRUE) {
             data$size <- data$votes
+        }
+        if(input$mustSee == TRUE) {
+            data <- data %>% filter(mustSee == TRUE)
         }
         data
     })
@@ -33,22 +36,13 @@ shinyServer(function(input, output, session) {
             5
         }
     })
-    # 3-4 minute video narrating how to use the app, talk about anything interesting I find
-
-    
-    # For tomorrow: first make smaller dataset with only data points with budget and revenue
-    # Check if worldwide and US revenue are really different (they probably are for intl films)
-    # Then make scatterplot of budget vs revenue, give some filtering options
-    # Third tab: bar chart of most popular? Best and worst rated? Ratings over time histogram? For 
-    # univariate stuff, just filter out everything that doesn't have nice values
-    # Put a "show break even line" checkbox
     
     output$genreSelect <- renderUI({
         data <- movies %>% arrange(primaryGenre)
         selectInput("genreSelect", 
                     "Select genres:",
-                    choices = unique(data$primaryGenre),
-                    selected = c("Romance", "Film-Noir"),
+                    choices = c("All Genres", unique(data$primaryGenre)),
+                    selected = c("Romance", "Film-Noir", "Family"),
                     multiple=TRUE)
     })
     
@@ -134,9 +128,9 @@ shinyServer(function(input, output, session) {
             # Select the movie the user clicked on and a subset of variables
             selectedMovie <- movieData() %>%
                 filter(imdb_title_id == clickData$key) %>%
-                mutate(year = as.integer(year), 
-                       duration = as.integer(duration),
-                       votes = as.integer(votes)) %>%
+                mutate(votes = scales::comma(votes),
+                       avg_vote = as.character(round(avg_vote, 1)),
+                       metascore = as.integer(metascore)) %>%
                 select(avg_vote, votes, budget, usa_gross_income, worlwide_gross_income, metascore) %>%
                 rename(`Average User Score`=avg_vote, `Number of Votes`=votes, Budget=budget,
                        `Gross Income (USA)`=usa_gross_income, 
@@ -153,9 +147,6 @@ shinyServer(function(input, output, session) {
             # Select the movie the user clicked on and a subset of variables
             selectedMovie <- movieData() %>%
                 filter(imdb_title_id == clickData$key) %>%
-                mutate(year = as.integer(year), 
-                       duration = as.integer(duration),
-                       votes = as.integer(votes)) %>%
                 select(description) %>%
                 rename(Description=description)
             selectedMovie
@@ -180,6 +171,9 @@ shinyServer(function(input, output, session) {
         if(!"All Genres" %in% input$genreSelectRev) {
             newData <- newData %>% filter(primaryGenre %in% input$genreSelectRev)
         }
+        if(input$mustSeeRev == TRUE) {
+            newData <- newData %>% filter(mustSee == TRUE)
+        }
         # Create color palette for genres
         pal <- c('#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#42d4f4', 
                  '#f032e6', '#bfef45', '#fabed4', '#469990', '#dcbeff', '#9A6324', '#fffac8', 
@@ -195,23 +189,20 @@ shinyServer(function(input, output, session) {
                      mode="markers",
                      x=~budgetNum,
                      y=~incomeNum,
-                     #size=~size,
-                     #sizes=5,
-                     marker=list(sizemode="diameter"),
                      color=~primaryGenre,
                      colors=pal,
                      alpha = 0.5,
                      name=~primaryGenre,
-                     hovertext=paste0("<b>",newData$original_title, "</b>",
+                     hovertext=paste0("<b>",newData$original_title, "</b> (", newData$year, ")",
                                          "<br><b>Budget: </b>", newData$budget,
-                                         "<br><b>Income: </b>", newData$worlwide_gross_income),
+                                         "<br><b>Revenue: </b>", newData$worlwide_gross_income),
                      hoverinfo="text",
                      height=700
         ) %>%
             layout(title=list(text="Movie Budgets vs Revenue"),
                    xaxis=list(title="Budget", range=c(0,350000000)),
-                   yaxis=list(title="Worldwide Revenue", range=c(0,2100000000)),
-                   legend=list(x=0.5, y=-0.2, xanchor="center",
+                   yaxis=list(title="Worldwide Revenue", range=c(0,2830000000)),
+                   legend=list(x=0.5, y=-0.15, xanchor="center",
                                orientation="h", itemsizing="constant")
             ) %>%
             config(displayModeBar = F)
@@ -220,9 +211,29 @@ shinyServer(function(input, output, session) {
                              x0=0, x1=350000000, y0=0, y1=350000000)
             p <- p %>% layout(shapes = evenLine)
         } 
-        
         p
     })
+    
+    output$dataDescription <- renderText(
+        "The data used for this project comes from this 
+        <a href=https://www.kaggle.com/stefanoleone992/imdb-extensive-dataset>Kaggle project</a>.
+        It was obtained by scraping IMDB's website, the largest and most complete internet database 
+        of movies and TV shows. It contains 23 variables for 85,855 movies, including ratings, 
+        main cast, description, runtime, genre, and budget/revenue. The dataset was last updated 
+        in January 2020 and includes all movies with at least 100 user votes on the website."
+    )
+    
+    output$plotDescription <- renderText(
+        "The 'ratings' plot displays the average IMDB user rating for movies over the years. You can
+        filter based on genre, country, language, year, and minimum number of user votes. Showing the 
+        vote count as point size helps give an indication of movie popularity (good or bad), and clicking
+        a movie displays more information about it below the plot. 'Must-see' movies are 
+        <a href=https://www.metacritic.com/about-metascores>designated</a> by Metacritic, and
+        are movies with a Metascore greater than 80 and more than 15 critic reviews. A movie's Metascore
+        is calculated by compiling critic reviews and taking a normalized weighted average.<br>
+        The 'revenue' plot plots movies' budget against their worldwide revenue. Movies above the 
+        'break even' line made a profit, while those below were less successful."
+    )
 
 })
 

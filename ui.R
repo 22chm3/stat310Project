@@ -23,7 +23,9 @@ shinyUI(fluidPage(
                                      max = 10000,
                                      value = 100),
                          checkboxInput("sizeControl",
-                                       "Show vote count as point size")
+                                       "Show vote count as point size"),
+                         checkboxInput("mustSee",
+                                       "Only display 'must-see' movies")
                      ),
                      
                      mainPanel(
@@ -34,6 +36,7 @@ shinyUI(fluidPage(
                          
                      )
                  )),
+        
         tabPanel("Revenue", fluid=TRUE,
                  titlePanel("IMDB Movie Data"),
                  
@@ -41,13 +44,22 @@ shinyUI(fluidPage(
                      sidebarPanel(
                          uiOutput("genreSelectRev"),
                          checkboxInput("breakEvenLine",
-                                       "Show break-even line")
+                                       "Show break-even line"),
+                         checkboxInput("mustSeeRev",
+                                       "Only display 'must-see' movies")
                      ),
                      
                      mainPanel(
                          plotlyOutput("revenuePlot")
                      )
-                 ))
+                 )),
+        
+        tabPanel("About the App", fluid=TRUE,
+                 titlePanel("About the Data"),
+                 htmlOutput("dataDescription"),
+                 titlePanel("About the Plots"),
+                 htmlOutput("plotDescription")
+                 )
     )
     
 ))
