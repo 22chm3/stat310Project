@@ -200,7 +200,7 @@ shinyServer(function(input, output, session) {
                      height=700
         ) %>%
             layout(title=list(text="Movie Budgets vs Revenue"),
-                   xaxis=list(title="Budget", range=c(0,350000000)),
+                   xaxis=list(title="Budget", range=c(0,360000000)),
                    yaxis=list(title="Worldwide Revenue", range=c(0,2830000000)),
                    legend=list(x=0.5, y=-0.15, xanchor="center",
                                orientation="h", itemsizing="constant")
@@ -208,7 +208,7 @@ shinyServer(function(input, output, session) {
             config(displayModeBar = F)
         if(input$breakEvenLine == TRUE) {
             evenLine <- list(type="line", line=list(color="black"),xref="x",yref="y",
-                             x0=0, x1=350000000, y0=0, y1=350000000)
+                             x0=0, x1=360000000, y0=0, y1=360000000)
             p <- p %>% layout(shapes = evenLine)
         } 
         p
