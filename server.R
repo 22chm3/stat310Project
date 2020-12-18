@@ -91,7 +91,7 @@ shinyServer(function(input, output, session) {
                      hoverinfo="text"
                      ) %>%
             layout(title=list(text="Movies Over the Years by Ratings"),
-                   xaxis=list(title="Year", range=c(1890, 2022)),
+                   xaxis=list(title="Year", range=input$yearSelect+c(-2,2)),
                    yaxis=list(title="Rating", range=c(0,10), zeroline=FALSE),
                    legend=list(x=0.5, y=-0.2, xanchor="center",
                                orientation="h", itemsizing="constant")
